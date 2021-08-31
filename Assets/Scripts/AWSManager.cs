@@ -1,3 +1,4 @@
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,6 +8,8 @@ using Amazon.S3.Util;
 using Amazon.CognitoIdentity;
 using Amazon.S3.Model;
 using Amazon.Runtime;
+using UnityEngine.Networking;
+
 
 
 public class AWSManager : MonoBehaviour
@@ -63,6 +66,8 @@ public class AWSManager : MonoBehaviour
       }
    }
 
+   public GameObject imageTarget;
+
    void Start()
    {
         var request = new ListObjectsRequest()
@@ -84,9 +89,61 @@ public class AWSManager : MonoBehaviour
                 Debug.Log("Exception: "+responseObj.Exception);
             }
         });
+
+        DownloadBundle();
    }
 
-  
+  public void DownloadBundle()
+  {
+      
+      /*
+
+      string bucketName = "sdaranatomy";
+      string fileName = "horse";
+
+      S3Client.GetObjectAsync(bucketName, fileName, (responseObj)=>
+      {
+          if (responseObj.Exception == null)
+          {
+              //file exists!
+              string data = null;
+              using (StreamReader reader = new StreamReader(responseObj.Response.ResponseStream))
+              {
+                  data = reader.ReadToEnd();
+                  Debug.Log(data);
+                AssetBundle bundle = AssetBundle.LoadFromFile(data);
+                GameObject horse = bundle.LoadAsset<GameObject>("horse");
+                Instantiate(horse);
+              }
+          }
+          else
+          {
+              Debug.Log("Response Exception: " + responseObj.Exception);
+          }
+      });
+    
+    */
+      
+
+      StartCoroutine(BundleRoutine());
+
+
+  }
+
+  IEnumerator BundleRoutine()
+  {
+      string uri = Keys.HORSE_URL;
+      using (UnityWebRequest request = UnityWebRequestAssetBundle.GetAssetBundle(uri))
+      {
+          yield return request.SendWebRequest();
+          AssetBundle bundle = DownloadHandlerAssetBundle.GetContent(request);
+
+          GameObject horse = bundle.LoadAsset<GameObject>("horse");
+          Instantiate(horse, imageTarget.transform);
+      }
+
+    
+  }
 
  
 }
